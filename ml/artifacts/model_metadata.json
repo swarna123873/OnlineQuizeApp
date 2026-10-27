@@ -1,0 +1,23 @@
+{
+  "model_version": "XGB-2PL-v1.0",
+  "trained_at": "2026-10-27T15:14:20.787031Z",
+  "feature_names": [
+    "current_theta",
+    "current_se",
+    "item_difficulty",
+    "item_discrimination",
+    "ability_diff",
+    "irt_probability",
+    "historical_topic_accuracy",
+    "recent_streak_accuracy",
+    "questions_answered_count"
+  ],
+  "train_samples": 1600,
+  "val_samples": 400,
+  "metrics": {
+    "log_loss": 0.5355,
+    "roc_auc": 0.8186,
+    "brier_score": 0.1765
+  },
+  "status": "VALIDATED"
+}

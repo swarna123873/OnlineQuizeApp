@@ -1,0 +1,1222 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assessment Diagnostic Report & Analytics — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .report-container {
+    max-width: 1200px;
+    margin: 2rem auto 4rem;
+    padding: 0 1.5rem;
+  }
+
+  /* Header Card */
+  .report-header-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: var(--radius-lg);
+    padding: 2.25rem 2.5rem;
+    text-align: center;
+    box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.2);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .report-header-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #6366f1, #10b981, #f59e0b, #6366f1);
+  }
+
+  .header-icon {
+    font-size: 3rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .report-title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 0.35rem;
+  }
+
+  .report-subtitle {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+  }
+
+  /* 4-Card Hero Diagnostic Performance Matrix */
+  .hero-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .hero-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.2);
+  }
+
+  .hero-icon-box {
+    width: 58px;
+    height: 58px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    flex-shrink: 0;
+  }
+
+  .hero-icon-score { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
+  .hero-icon-theta { background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); }
+  .hero-icon-time  { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); }
+  .hero-icon-prec  { background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); }
+
+  .hero-data {
+    flex: 1;
+  }
+
+  .hero-val {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.1;
+    margin-bottom: 0.25rem;
+  }
+
+  .hero-lbl {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .hero-sub {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+  }
+
+  /* Visual Analytics Section (2 Columns) */
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 1.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  @media (max-width: 960px) {
+    .analytics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .analytics-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 2rem;
+  }
+
+  .analytics-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .analytics-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+  }
+
+  .chart-tab-pills {
+    display: flex;
+    gap: 0.35rem;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 0.25rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border-subtle);
+  }
+
+  .chart-pill-btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .chart-pill-btn.active {
+    background: #6366f1;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  }
+
+  /* Native Canvas Wrapper */
+  .canvas-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 270px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  canvas {
+    width: 100% !important;
+    height: 270px !important;
+    display: block;
+  }
+
+  /* Interactive Chart Tooltip */
+  #chartTooltip {
+    position: absolute;
+    display: none;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid #6366f1;
+    border-radius: var(--radius-sm);
+    padding: 0.65rem 0.9rem;
+    font-size: 0.8rem;
+    color: #ffffff;
+    pointer-events: none;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+    z-index: 100;
+    line-height: 1.4;
+  }
+
+  /* Topic Mastery Bars */
+  .topic-item {
+    margin-bottom: 1.15rem;
+  }
+
+  .topic-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  .topic-progress-bg {
+    background: rgba(255, 255, 255, 0.08);
+    height: 8px;
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  .topic-progress-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.8s ease;
+  }
+
+  .fill-mastered { background: #10b981; }
+  .fill-developing { background: #f59e0b; }
+  .fill-needs-review { background: #ef4444; }
+
+  /* Recommendations */
+  .rec-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 4px solid #6366f1;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: 0.9rem 1.15rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .rec-card.rec-priority {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.05);
+  }
+
+  .rec-card.rec-strength {
+    border-left-color: #10b981;
+    background: rgba(16, 185, 129, 0.05);
+  }
+
+  .rec-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+  }
+
+  .rec-detail {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  /* Question Review Section */
+  .review-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 3rem 0 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .review-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .filter-pills {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .filter-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    padding: 0.45rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: var(--transition);
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    color: #ffffff;
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.15);
+  }
+
+  /* Question Card */
+  .q-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.5rem;
+    transition: var(--transition);
+  }
+
+  .q-card.q-correct { border-left: 4px solid #10b981; }
+  .q-card.q-incorrect { border-left: 4px solid #ef4444; }
+
+  .q-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .q-seq-topic {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .q-seq-num {
+    font-weight: 800;
+    color: #818cf8;
+    font-size: 1rem;
+  }
+
+  .q-topic-badge {
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    padding: 0.2rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .q-outcome-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .badge-outcome-correct {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .badge-outcome-incorrect {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .q-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    line-height: 1.5;
+    margin-bottom: 1.25rem;
+  }
+
+  /* Options list */
+  .options-review-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .opt-review-item {
+    padding: 0.9rem 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+    transition: var(--transition);
+  }
+
+  .opt-review-item.is-selected-correct {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    color: #ffffff;
+  }
+
+  .opt-review-item.is-selected-wrong {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    color: #ffffff;
+  }
+
+  .opt-review-item.is-correct-target {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.06);
+    color: #ffffff;
+  }
+
+  .opt-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+  }
+
+  .tag-choice-correct { background: #10b981; color: #064e3b; }
+  .tag-choice-wrong   { background: #ef4444; color: #ffffff; }
+  .tag-correct-answer {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+  }
+
+  /* See Justification Button */
+  .justification-toggle-btn {
+    background: rgba(99, 102, 241, 0.12);
+    color: #c7d2fe;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    padding: 0.65rem 1.25rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+  }
+
+  .justification-toggle-btn:hover {
+    background: rgba(99, 102, 241, 0.25);
+    border-color: #818cf8;
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+  }
+
+  .justification-toggle-btn.btn-needs-attention {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fde68a;
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+
+  .justification-toggle-btn.btn-needs-attention:hover {
+    background: rgba(245, 158, 11, 0.25);
+    border-color: #fbbf24;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+  }
+
+  /* Detailed Justification Box */
+  .justification-box {
+    margin-top: 1.25rem;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .justification-box.open { display: block; }
+
+  .just-head {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #c7d2fe;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .just-card-section {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-left: 3px solid #6366f1;
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .just-card-section.section-concept {
+    border-left-color: #818cf8;
+    background: rgba(99, 102, 241, 0.04);
+  }
+
+  .just-card-section.section-rationale {
+    border-left-color: #10b981;
+    background: rgba(16, 185, 129, 0.04);
+  }
+
+  .just-card-section.section-distractor-wrong {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.04);
+  }
+
+  .just-card-section.section-distractor-correct {
+    border-left-color: #10b981;
+    background: rgba(16, 185, 129, 0.04);
+  }
+
+  .just-card-section.section-tip {
+    border-left-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.04);
+  }
+
+  .just-section-heading {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .heading-concept { color: #a5b4fc; }
+  .heading-rationale { color: #6ee7b7; }
+  .heading-distractor { color: #fca5a5; }
+  .heading-distractor-good { color: #6ee7b7; }
+  .heading-tip { color: #fde68a; }
+
+  .just-section-content {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: #e2e8f0;
+    margin: 0;
+  }
+
+  .just-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .action-nav-footer {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 3.5rem 0 2rem;
+    flex-wrap: wrap;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+  <!-- Header Card -->
+  <div class="report-header-card">
+    <div class="header-icon">🎉</div>
+    <h1 class="report-title">Assessment Submitted!</h1>
+    <p class="report-subtitle">
+      Comprehensive Diagnostic Report & Review for <strong>{{ attempt.assessment.title }}</strong>
+    </p>
+  </div>
+
+  <!-- 4-Card Hero Diagnostic Performance Matrix -->
+  <div class="hero-metrics-grid">
+    <!-- Card 1: Score & Accuracy -->
+    <div class="hero-card">
+      <div class="hero-icon-box hero-icon-score">🎯</div>
+      <div class="hero-data">
+        <div class="hero-val" style="color: #6ee7b7;">{{ attempt.raw_score|default:0 }} / 10</div>
+        <div class="hero-lbl">Score ({{ attempt.accuracy|default:0 }}% Accuracy)</div>
+        <div class="hero-sub">{{ attempt.raw_score|default:0 }} Correct &middot; {{ attempt.incorrect_count }} Incorrect</div>
+      </div>
+    </div>
+
+    <!-- Card 2: Calibrated Ability θ -->
+    <div class="hero-card">
+      <div class="hero-icon-box hero-icon-theta">🧠</div>
+      <div class="hero-data">
+        <div class="hero-val" style="color: {{ theta_tier_color }};">
+          {% if attempt.final_theta is not None %}{{ attempt.final_theta|floatformat:2 }}{% else %}0.00{% endif %}
+        </div>
+        <div class="hero-lbl">Latent Ability (&theta;)</div>
+        <div class="hero-sub">
+          <span class="badge" style="background: rgba(99,102,241,0.2); color: #c7d2fe; padding: 0.15rem 0.5rem; border-radius: 9999px;">
+            {{ theta_tier }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Time Taken & Pace -->
+    <div class="hero-card">
+      <div class="hero-icon-box hero-icon-time">⏱️</div>
+      <div class="hero-data">
+        <div class="hero-val" style="color: #fbbf24;">{{ attempt.duration_formatted }}</div>
+        <div class="hero-lbl">Total Time Taken</div>
+        <div class="hero-sub">Pace: {{ pace_per_question|default:"~7s" }} / question</div>
+      </div>
+    </div>
+
+    <!-- Card 4: Psychometric Precision -->
+    <div class="hero-card">
+      <div class="hero-icon-box hero-icon-prec">⚡</div>
+      <div class="hero-data">
+        <div class="hero-val" style="color: #c7d2fe;">&plusmn;{{ attempt.final_se|floatformat:2|default:"0.30" }}</div>
+        <div class="hero-lbl">Standard Error (SE)</div>
+        <div class="hero-sub">{{ confidence_index }}% Measurement Precision</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visual Analytics & Charts Section (2 Columns) -->
+  <div class="analytics-grid">
+    <!-- Native Canvas Interactive Chart -->
+    <div class="analytics-card">
+      <div class="analytics-card-header">
+        <h2 class="analytics-card-title">
+          <span>📈</span> <span id="chartTitle">IRT Ability Progression (&theta; Curve)</span>
+        </h2>
+        <div class="chart-tab-pills">
+          <button id="btnTabTheta" class="chart-pill-btn active" onclick="switchVisualChart('theta')">
+            Ability &theta; Curve
+          </button>
+          <button id="btnTabInfo" class="chart-pill-btn" onclick="switchVisualChart('info')">
+            Item Information
+          </button>
+        </div>
+      </div>
+
+      <p id="chartDesc" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Tracks how the 2PL Item Response Theory engine calibrated your latent ability after each sequential question. Shaded boundary represents &plusmn;1 SE uncertainty band.
+      </p>
+
+      <div class="canvas-wrapper">
+        <canvas id="analyticsCanvas" width="700" height="270"></canvas>
+        <div id="chartTooltip"></div>
+      </div>
+    </div>
+
+    <!-- Topic Mastery & ZPD Guidance -->
+    <div class="analytics-card">
+      <div class="analytics-card-header">
+        <h2 class="analytics-card-title">
+          <span>🎯</span> Topic Mastery & ZPD Guidance
+        </h2>
+      </div>
+
+      <!-- Topic Mastery Meters -->
+      <div style="margin-bottom: 1.5rem;">
+        {% for topic in topic_mastery %}
+          <div class="topic-item">
+            <div class="topic-header">
+              <span>{{ topic.topic }}</span>
+              <span style="font-size: 0.82rem; color: var(--text-muted);">
+                {{ topic.correct }}/{{ topic.total }} ({{ topic.accuracy }}%)
+              </span>
+            </div>
+            <div class="topic-progress-bg">
+              <div class="topic-progress-fill fill-{{ topic.tier_class }}" style="width: {{ topic.accuracy }}%;"></div>
+            </div>
+          </div>
+        {% empty %}
+          <p style="color: var(--text-muted); font-size: 0.88rem;">No topic telemetry recorded.</p>
+        {% endfor %}
+      </div>
+
+      <!-- ZPD Recommendations -->
+      <h3 style="font-size: 1rem; font-weight: 700; color: #ffffff; margin-bottom: 0.75rem;">
+        🧠 Personalized Recommendations
+      </h3>
+      {% for rec in recommendations %}
+        <div class="rec-card rec-{{ rec.type }}">
+          <div class="rec-title">{{ rec.title }}</div>
+          <p class="rec-detail">{{ rec.detail }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- QUESTION-BY-QUESTION REVIEW & JUSTIFICATION ENGINE -->
+  <div class="review-header-row">
+    <div>
+      <h2 class="review-title">Detailed Question Review & Justifications</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem;">
+        Inspect every question, your selected option, and official justifications for correct answers.
+      </p>
+    </div>
+    <div class="filter-pills">
+      <button class="filter-btn active" onclick="filterQuestions('all')">
+        All Questions ({{ review_data|length }})
+      </button>
+      <button class="filter-btn" onclick="filterQuestions('incorrect')">
+        ❌ Incorrect ({{ attempt.incorrect_count }})
+      </button>
+      <button class="filter-btn" onclick="filterQuestions('correct')">
+        ✅ Correct ({{ attempt.raw_score|default:0 }})
+      </button>
+    </div>
+  </div>
+
+  <!-- Question Cards List -->
+  <div id="questionsReviewList">
+    {% for item in review_data %}
+      <div class="q-card {% if item.is_correct %}q-correct{% else %}q-incorrect{% endif %}" data-outcome="{% if item.is_correct %}correct{% else %}incorrect{% endif %}">
+        <div class="q-top-row">
+          <div class="q-seq-topic">
+            <span class="q-seq-num">Q{{ item.sequence }} of 10</span>
+            <span class="q-topic-badge">{{ item.topic }}</span>
+            <span class="badge" style="background: rgba(255,255,255,0.06); color: #cbd5e1; font-size: 0.75rem;">
+              {{ item.difficulty }} (b={{ item.difficulty_b }})
+            </span>
+          </div>
+          <div>
+            {% if item.is_correct %}
+              <span class="q-outcome-badge badge-outcome-correct">
+                ✅ Correct (+1)
+              </span>
+            {% else %}
+              <span class="q-outcome-badge badge-outcome-incorrect">
+                ❌ Incorrect (0)
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="q-text">{{ item.question_text }}</div>
+
+        <!-- Options Review Grid -->
+        <div class="options-review-grid">
+          {% for opt in item.options %}
+            <div class="opt-review-item 
+              {% if opt.is_selected and opt.is_correct %}is-selected-correct
+              {% elif opt.is_selected and not opt.is_correct %}is-selected-wrong
+              {% elif opt.is_correct and not item.is_correct %}is-correct-target
+              {% endif %}">
+              <div>
+                <strong style="margin-right: 0.5rem; color: #818cf8;">{{ opt.key }}.</strong>
+                {{ opt.text }}
+              </div>
+              <div>
+                {% if opt.is_selected and opt.is_correct %}
+                  <span class="opt-tag tag-choice-correct">Your Choice (Correct)</span>
+                {% elif opt.is_selected and not opt.is_correct %}
+                  <span class="opt-tag tag-choice-wrong">Your Choice (Incorrect)</span>
+                {% elif opt.is_correct and not item.is_correct %}
+                  <span class="opt-tag tag-correct-answer">Correct Answer</span>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Justification Toggle Button -->
+        <div>
+          <button class="justification-toggle-btn {% if not item.is_correct %}btn-needs-attention{% endif %}" 
+                  onclick="toggleJustification({{ item.sequence }})">
+            <span>💡</span>
+            <span id="btnText-{{ item.sequence }}">See Justification for Correct Answer</span>
+          </button>
+        </div>
+
+        <!-- Collapsible Justification Panel -->
+        <div id="justification-{{ item.sequence }}" class="justification-box">
+          <div class="just-head">
+            <span>📖</span>
+            <span>Official Correct Answer: Option {{ item.correct_answer }} &mdash; {{ item.correct_text }}</span>
+          </div>
+
+          <!-- Section 1: Detailed Step-by-Step Pedagogical Justification -->
+          <div class="just-card-section section-rationale">
+            <div class="just-section-heading heading-rationale">
+              <span>✅</span> Step-by-Step Pedagogical Justification
+            </div>
+            <p class="just-section-content">
+              {{ item.justification.rationale }}
+            </p>
+          </div>
+
+          <!-- Section 2: Conceptual Foundation -->
+          <div class="just-card-section section-concept">
+            <div class="just-section-heading heading-concept">
+              <span>🎯</span> Conceptual Foundation & Principles Tested
+            </div>
+            <p class="just-section-content">
+              {{ item.justification.concept_context }}
+            </p>
+          </div>
+
+          <!-- Section 3: In-Depth Distractor & Misconception Analysis -->
+          <div class="just-card-section {% if item.is_correct %}section-distractor-correct{% else %}section-distractor-wrong{% endif %}">
+            <div class="just-section-heading {% if item.is_correct %}heading-distractor-good{% else %}heading-distractor{% endif %}">
+              <span>{% if item.is_correct %}🎯{% else %}⚠️{% endif %}</span> 
+              {% if item.is_correct %}Distractor & Conceptual Trap Analysis{% else %}Diagnostic Error & Misconception Analysis{% endif %}
+            </div>
+            <p class="just-section-content">
+              {{ item.justification.distractor_why }}
+            </p>
+            <p class="just-section-content" style="margin-top: 0.5rem; font-size: 0.88rem; color: var(--text-muted);">
+              {{ item.justification.distractor_summary }}
+            </p>
+          </div>
+
+          <!-- Section 4: Key Exam Takeaway -->
+          <div class="just-card-section section-tip">
+            <div class="just-section-heading heading-tip">
+              <span>💡</span> Key Examination Tip & Recall Strategy
+            </div>
+            <p class="just-section-content">
+              {{ item.justification.exam_tip }}
+            </p>
+          </div>
+
+          <!-- Section 5: Psychometric Telemetry & Source Reference -->
+          <div class="just-meta-row">
+            <span>📚 <strong>Curriculum Reference:</strong> {{ item.source_reference|default:"Course Material" }}</span>
+            <span>⚡ <strong>Discrimination (a):</strong> {{ item.discrimination_a }}</span>
+            <span>🎯 <strong>Item Difficulty (b):</strong> {{ item.difficulty_b }}</span>
+            <span>📊 <strong>Ability &theta; after Question:</strong> {{ item.theta_after|floatformat:2 }}</span>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p style="color: var(--text-muted); text-align: center; padding: 2rem;">No responses recorded for this attempt.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Bottom Action Buttons -->
+  <div class="action-nav-footer">
+    <a href="{% url 'student_dashboard' %}#history" class="btn btn-primary" style="padding: 0.9rem 2rem;">
+      &larr; Back to My Assessment History
+    </a>
+    {% if attempt.assessment.academic_type == 'school' %}
+      <a href="{% url 'student_school_zone' %}" class="btn btn-secondary" style="padding: 0.9rem 1.75rem;">
+        Take Another Assessment
+      </a>
+    {% else %}
+      <a href="{% url 'student_college_zone' %}" class="btn btn-secondary" style="padding: 0.9rem 1.75rem;">
+        Take Another Assessment
+      </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Native HTML5 Canvas Informatic Chart Engine (Zero Dependencies, 100% Reliable) -->
+<script>
+  const trajectoryLabels = {{ trajectory_labels|safe }};
+  const trajectoryThetas = {{ trajectory_thetas|safe }};
+  const trajectorySeUpper = {{ trajectory_se_upper|safe }};
+  const trajectorySeLower = {{ trajectory_se_lower|safe }};
+  const trajectoryInfo = {{ trajectory_info|safe }};
+
+  let currentChartMode = 'theta';
+  let chartPoints = [];
+
+  function switchVisualChart(mode) {
+    currentChartMode = mode;
+    const btnTheta = document.getElementById('btnTabTheta');
+    const btnInfo = document.getElementById('btnTabInfo');
+    const title = document.getElementById('chartTitle');
+    const desc = document.getElementById('chartDesc');
+
+    if (mode === 'theta') {
+      btnTheta.classList.add('active');
+      btnInfo.classList.remove('active');
+      title.textContent = 'IRT Ability Progression (θ Curve)';
+      desc.textContent = 'Tracks how the 2PL Item Response Theory engine calibrated your latent ability after each sequential question. Shaded boundary represents ±1 SE uncertainty band.';
+    } else {
+      btnInfo.classList.add('active');
+      btnTheta.classList.remove('active');
+      title.textContent = 'Fisher Item Information per Question';
+      desc.textContent = 'Displays the information diagnostic value I(θ) yielded by each question administered by the Computer Adaptive Testing engine.';
+    }
+    renderChart();
+  }
+
+  function renderChart() {
+    const canvas = document.getElementById('analyticsCanvas');
+    if (!canvas) return;
+
+    // Handle high DPI displays
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = 270 * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+
+    const width = rect.width;
+    const height = 270;
+    const padding = { top: 25, right: 30, bottom: 40, left: 45 };
+    const chartW = width - padding.left - padding.right;
+    const chartH = height - padding.top - padding.bottom;
+
+    ctx.clearRect(0, 0, width, height);
+    chartPoints = [];
+
+    const n = trajectoryLabels.length;
+    if (n === 0) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('No sequence telemetry available for this attempt', width / 2, height / 2);
+      return;
+    }
+
+    if (currentChartMode === 'theta') {
+      // Find min and max for theta scale
+      const allVals = [...trajectoryThetas, ...trajectorySeUpper, ...trajectorySeLower];
+      let minVal = Math.min(-2.0, ...allVals) - 0.3;
+      let maxVal = Math.max(2.0, ...allVals) + 0.3;
+
+      function getY(val) {
+        return padding.top + chartH - ((val - minVal) / (maxVal - minVal)) * chartH;
+      }
+
+      function getX(i) {
+        return padding.left + (i / Math.max(1, n - 1)) * chartW;
+      }
+
+      // Draw horizontal grid lines & Y labels
+      const step = (maxVal - minVal) / 4;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'right';
+
+      for (let s = minVal; s <= maxVal; s += step) {
+        const y = getY(s);
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+        ctx.fillText(s.toFixed(1), padding.left - 8, y + 4);
+      }
+
+      // Draw zero axis line
+      const zeroY = getY(0);
+      if (zeroY >= padding.top && zeroY <= padding.top + chartH) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(padding.left, zeroY);
+        ctx.lineTo(width - padding.right, zeroY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Draw X axis labels
+      ctx.textAlign = 'center';
+      for (let i = 0; i < n; i++) {
+        const x = getX(i);
+        ctx.fillText(trajectoryLabels[i], x, height - padding.bottom + 18);
+      }
+
+      // 1. Shaded SE Confidence Band
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const x = getX(i);
+        const y = getY(trajectorySeUpper[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      for (let i = n - 1; i >= 0; i--) {
+        const x = getX(i);
+        const y = getY(trajectorySeLower[i]);
+        ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.12)';
+      ctx.fill();
+
+      // SE boundary dashed lines
+      ctx.strokeStyle = 'rgba(165, 180, 252, 0.25)';
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const x = getX(i);
+        const y = getY(trajectorySeUpper[i]);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const x = getX(i);
+        const y = getY(trajectorySeLower[i]);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 2. Main Theta Trajectory Line
+      ctx.strokeStyle = '#818cf8';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#6366f1';
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const x = getX(i);
+        const y = getY(trajectoryThetas[i]);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      // 3. Data Point Nodes
+      for (let i = 0; i < n; i++) {
+        const x = getX(i);
+        const y = getY(trajectoryThetas[i]);
+        const thetaVal = trajectoryThetas[i];
+        const seVal = (trajectorySeUpper[i] - trajectoryThetas[i]).toFixed(2);
+
+        // Store for interactive hover
+        chartPoints.push({
+          x: x, y: y,
+          label: trajectoryLabels[i],
+          val: thetaVal,
+          se: seVal,
+          info: trajectoryInfo[i] || 'N/A'
+        });
+
+        // Outer glow disc
+        ctx.beginPath();
+        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#6366f1';
+        ctx.fill();
+
+        // Inner core
+        ctx.beginPath();
+        ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+
+        // Value text above node
+        ctx.fillStyle = '#c7d2fe';
+        ctx.font = '10px sans-serif';
+        ctx.fillText(thetaVal.toFixed(2), x, y - 10);
+      }
+    } else {
+      // ITEM INFORMATION BAR CHART
+      const maxInfo = Math.max(1.0, ...trajectoryInfo) + 0.2;
+      const barW = Math.min(36, (chartW / n) * 0.6);
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'right';
+
+      for (let s = 0; s <= maxInfo; s += maxInfo / 3) {
+        const y = padding.top + chartH - (s / maxInfo) * chartH;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, y);
+        ctx.lineTo(width - padding.right, y);
+        ctx.stroke();
+        ctx.fillText(s.toFixed(2), padding.left - 8, y + 4);
+      }
+
+      ctx.textAlign = 'center';
+      for (let i = 0; i < n; i++) {
+        const x = padding.left + (i + 0.5) * (chartW / n);
+        const infoVal = trajectoryInfo[i] || 0;
+        const barH = (infoVal / maxInfo) * chartH;
+        const y = padding.top + chartH - barH;
+
+        // Draw glowing gradient bar
+        const grad = ctx.createLinearGradient(0, y, 0, padding.top + chartH);
+        grad.addColorStop(0, '#10b981');
+        grad.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+
+        ctx.fillStyle = grad;
+        ctx.fillRect(x - barW / 2, y, barW, barH);
+
+        ctx.fillStyle = '#6ee7b7';
+        ctx.font = '10px sans-serif';
+        ctx.fillText(infoVal.toFixed(2), x, y - 6);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(trajectoryLabels[i], x, height - padding.bottom + 18);
+
+        chartPoints.push({
+          x: x, y: y,
+          label: trajectoryLabels[i],
+          val: trajectoryThetas[i],
+          info: infoVal
+        });
+      }
+    }
+  }
+
+  // Interactive Hover Tooltip for Canvas
+  const canvas = document.getElementById('analyticsCanvas');
+  const tooltip = document.getElementById('chartTooltip');
+
+  if (canvas && tooltip) {
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      let hovered = null;
+      for (const p of chartPoints) {
+        const dist = Math.hypot(p.x - mouseX, p.y - mouseY);
+        if (dist < 18) {
+          hovered = p;
+          break;
+        }
+      }
+
+      if (hovered) {
+        tooltip.style.display = 'block';
+        tooltip.style.left = (hovered.x + 15) + 'px';
+        tooltip.style.top = (hovered.y - 15) + 'px';
+        if (currentChartMode === 'theta') {
+          tooltip.innerHTML = `
+            <strong>${hovered.label}</strong><br>
+            Ability &theta;: <span style="color:#818cf8; font-weight:700;">${hovered.val.toFixed(2)}</span><br>
+            SE Band: &plusmn;${hovered.se}<br>
+            Information: ${hovered.info}
+          `;
+        } else {
+          tooltip.innerHTML = `
+            <strong>${hovered.label}</strong><br>
+            Fisher Info I(&theta;): <span style="color:#10b981; font-weight:700;">${hovered.info}</span><br>
+            Latent Ability &theta;: ${hovered.val.toFixed(2)}
+          `;
+        }
+      } else {
+        tooltip.style.display = 'none';
+      }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  }
+
+  // Initialize and handle window resize
+  window.addEventListener('DOMContentLoaded', renderChart);
+  window.addEventListener('resize', renderChart);
+
+  // Filter Questions
+  function filterQuestions(filterType) {
+    const cards = document.querySelectorAll('.q-card');
+    const buttons = document.querySelectorAll('.filter-btn');
+
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+
+    cards.forEach(card => {
+      const outcome = card.getAttribute('data-outcome');
+      if (filterType === 'all' || outcome === filterType) {
+        card.style.display = 'block';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  // Toggle Justification Drawer
+  function toggleJustification(seq) {
+    const box = document.getElementById('justification-' + seq);
+    const btnText = document.getElementById('btnText-' + seq);
+    if (!box) return;
+
+    if (box.classList.contains('open')) {
+      box.classList.remove('open');
+      btnText.textContent = 'See Justification for Correct Answer';
+    } else {
+      box.classList.add('open');
+      btnText.textContent = 'Hide Justification';
+    }
+  }
+</script>
+{% endblock %}

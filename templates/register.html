@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Account — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Select your role to get started with AdaptIQ</p>
+    </div>
+
+    <div id="error-message-container"></div>
+
+    <form id="auth-form" method="POST" action="{% url 'register' %}">
+      {% csrf_token %}
+
+      <!-- Step 1: Role Selection -->
+      <span class="role-selector-label">1. Select Account Role</span>
+      <div class="role-grid">
+        <div class="role-card active" data-role="educator" id="role-educator">
+          <input type="radio" name="role" value="educator" checked>
+          <span class="role-icon">👨‍🏫</span>
+          <span class="role-name">Educator/School</span>
+          <span class="role-desc">Upload notes & manage tests</span>
+        </div>
+
+        <div class="role-card" data-role="student" id="role-student">
+          <input type="radio" name="role" value="student">
+          <span class="role-icon">🎓</span>
+          <span class="role-name">Student</span>
+          <span class="role-desc">Take adaptive assessments</span>
+        </div>
+      </div>
+
+      <input type="hidden" id="selected-role" name="role" value="educator">
+
+      <!-- Step 2: Credentials (Email & Password Only) -->
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-input" 
+          placeholder="name@institution.edu" 
+          required 
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-input" 
+          placeholder="Enter a strong password" 
+          required 
+          autocomplete="new-password"
+        >
+        <div class="password-requirements" style="margin-top: 0.6rem; font-size: 0.8rem; color: var(--text-muted); background: rgba(255,255,255,0.02); padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div style="font-weight: 600; color: #d1d5db; margin-bottom: 0.3rem;">Password must contain:</div>
+          <div id="rule-length" style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem;">
+            <span>• At least 6 characters</span>
+          </div>
+          <div id="rule-letter" style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem;">
+            <span>• At least one letter (a-z, A-Z)</span>
+          </div>
+          <div id="rule-number" style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem;">
+            <span>• At least one number (0-9)</span>
+          </div>
+          <div id="rule-special" style="display: flex; align-items: center; gap: 0.4rem;">
+            <span>• At least one special character (!@#$%^&*)</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary auth-submit-btn">
+        Create Account &rarr;
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <span>Already have an account?</span>
+      <a href="{% url 'login' %}">Log In</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock %}

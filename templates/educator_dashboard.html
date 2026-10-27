@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Educator Portal — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dashboard-header {
+    padding: 3rem 2rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .dashboard-title {
+    font-size: 2.2rem;
+  }
+
+  .dashboard-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  .educator-paths-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1100px;
+    margin: 2.5rem auto;
+    padding: 0 2rem;
+  }
+
+  .path-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .path-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 15px 35px -10px rgba(99, 102, 241, 0.25);
+  }
+
+  .path-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .path-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .path-desc {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.75rem;
+    flex: 1;
+  }
+
+  .stats-strip {
+    display: flex;
+    gap: 1.5rem;
+    max-width: 1100px;
+    margin: 1.5rem auto 0;
+    padding: 0 2rem;
+  }
+
+  .stat-chip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .stat-chip strong {
+    color: #ffffff;
+    font-size: 1.1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <div>
+    <h1 class="dashboard-title">Educator Portal</h1>
+    <p class="dashboard-subtitle">Create adaptive assessments from curriculum notes or review existing questions</p>
+  </div>
+  <div>
+    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; border: 1px solid rgba(16, 185, 129, 0.3);">
+      Role: Educator/School
+    </span>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stat-chip">
+    <span>📄 Documents Uploaded:</span>
+    <strong>{{ total_docs }}</strong>
+  </div>
+  <div class="stat-chip">
+    <span>❓ Total Generated Drafts:</span>
+    <strong>{{ total_drafts }}</strong>
+  </div>
+  <div class="stat-chip">
+    <span>✅ Approved Questions:</span>
+    <strong>{{ approved_drafts }}</strong>
+  </div>
+</div>
+
+<div class="educator-paths-grid">
+  <!-- School Educator Workflow -->
+  <div class="path-card">
+    <div class="path-icon">🏫</div>
+    <h2 class="path-title">School Educator</h2>
+    <p class="path-desc">
+      Set up assessments for K-12 education. Register School Name, Board (CBSE, ICSE, State Board), Class, Subject, and upload curriculum notes in PDF format.
+    </p>
+    <a href="{% url 'school_form' %}" class="btn btn-primary" style="width: 100%;">
+      Create School Assessment &rarr;
+    </a>
+  </div>
+
+  <!-- College Educator Workflow -->
+  <div class="path-card">
+    <div class="path-icon">🏛️</div>
+    <h2 class="path-title">College Educator</h2>
+    <p class="path-desc">
+      Set up higher-education university assessments. Register College Name, Degree/Course, Academic Year, Branch, Core/Elective classification, Subject, and upload PDF notes.
+    </p>
+    <a href="{% url 'college_form' %}" class="btn btn-primary" style="width: 100%;">
+      Create College Assessment &rarr;
+    </a>
+  </div>
+</div>
+{% endblock %}

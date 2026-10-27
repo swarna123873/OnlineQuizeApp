@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}AdaptIQ — AI-Powered Adaptive Assessment Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+  .hero-section {
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1rem;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid var(--border-accent);
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    color: #c7d2fe;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title {
+    font-size: 3.25rem;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    max-width: 780px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+  }
+
+  .hero-cta {
+    display: flex;
+    justify-content: center;
+    gap: 1.25rem;
+    margin-bottom: 4rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto 5rem;
+    padding: 0 1.5rem;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 2rem 1.75rem;
+    text-align: left;
+    transition: var(--transition);
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 12px 30px -10px rgba(99, 102, 241, 0.2);
+  }
+
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 1.25rem;
+    display: inline-block;
+  }
+
+  .feature-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+  }
+
+  .feature-card p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+  <div class="hero-tag">
+    <span>🔬</span>
+    <span>Psychometric 2PL IRT & Machine Learning (XGBoost)</span>
+  </div>
+
+  <h1 class="hero-title">
+    AI-Powered Adaptive Assessment & Personalized Learning
+  </h1>
+
+  <p class="hero-subtitle">
+    Moving beyond static multiple-choice testing. AdaptIQ calculates your real-time latent ability using Item Response Theory (2PL) and selects tailored questions with Fisher Information and XGBoost predictive modeling.
+  </p>
+
+  <div class="hero-cta">
+    <a href="{% url 'register' %}" class="btn btn-primary" style="padding: 0.9rem 2rem; font-size: 1.05rem;">
+      Register Account
+    </a>
+    <a href="{% url 'login' %}" class="btn btn-secondary" style="padding: 0.9rem 2rem; font-size: 1.05rem;">
+      Sign In
+    </a>
+  </div>
+</section>
+
+<!-- Feature Showcase -->
+<section class="features-grid">
+  <div class="feature-card">
+    <div class="feature-icon">📐</div>
+    <h3>2-Parameter Logistic IRT</h3>
+    <p>
+      Models student ability &theta; against item difficulty <em>b<sub>i</sub></em> and discrimination <em>a<sub>i</sub></em>. Maximum a Posteriori estimation ensures stable measurement without arbitrary heuristics.
+    </p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">⚡</div>
+    <h3>XGBoost Predictive Signal</h3>
+    <p>
+      Supervised gradient boosted decision trees predict response probabilities based on candidate item parameters, topic history, and student performance metrics before the answer is submitted.
+    </p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">🎯</div>
+    <h3>Adaptive 10-Question Engine</h3>
+    <p>
+      Every single response re-estimates latent ability and dynamically selects the next most informative question while maintaining topic balance and progressive educational objectives.
+    </p>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-icon">🏫</div>
+    <h3>Educator-Driven Matching</h3>
+    <p>
+      Educators upload course material to generate approved question pools. Students access strictly registered School and College assessments through dynamic cascading dropdowns.
+    </p>
+  </div>
+</section>
+{% endblock %}

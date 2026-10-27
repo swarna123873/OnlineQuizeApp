@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Assessment Terminated — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .terminated-container {
+    max-width: 800px;
+    margin: 3.5rem auto;
+    padding: 0 1.5rem;
+  }
+
+  .terminated-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 2px solid #ef4444;
+    border-radius: var(--radius-lg);
+    padding: 3rem 2.5rem;
+    box-shadow: 0 0 50px rgba(239, 68, 68, 0.25);
+    text-align: center;
+  }
+
+  .terminated-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  .terminated-card h1 {
+    font-size: 2.1rem;
+    color: #fca5a5;
+    margin-bottom: 0.5rem;
+  }
+
+  .terminated-card p {
+    color: #cbd5e1;
+    font-size: 1.05rem;
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
+    line-height: 1.55;
+  }
+
+  .events-card {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: left;
+    margin-bottom: 2.5rem;
+  }
+
+  .events-card h3 {
+    font-size: 1.1rem;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    font-size: 0.92rem;
+  }
+
+  .event-item:last-child {
+    border-bottom: none;
+  }
+
+  .event-badge {
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+    font-weight: 700;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    margin-right: 0.5rem;
+  }
+
+  .event-time {
+    color: var(--text-dim);
+    font-size: 0.82rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="terminated-container">
+  <div class="terminated-card">
+    <div class="terminated-icon">🚫</div>
+    <h1>Assessment Terminated</h1>
+    <p>
+      Your assessment session for <strong>{{ attempt.assessment.title }}</strong> was automatically halted due to 
+      exceeding the maximum allowed <strong>3 integrity infractions</strong> under the proctoring policy.
+    </p>
+
+    <div class="events-card">
+      <h3>
+        <span>⚠️</span> Infraction Log (3 of 3 Strikes)
+      </h3>
+      {% for ev in events %}
+        <div class="event-item">
+          <div>
+            <span class="event-badge">Strike {{ ev.warning_number }}</span>
+            <strong style="color: #ffffff;">{{ ev.get_event_type_display }}</strong>
+          </div>
+          <span class="event-time">{{ ev.timestamp|date:"H:i:s" }}</span>
+        </div>
+      {% empty %}
+        <p style="color: var(--text-muted); margin: 0;">Integrity infractions were recorded for this attempt.</p>
+      {% endfor %}
+    </div>
+
+    <div>
+      <a href="{% url 'student_dashboard' %}" class="btn btn-primary" style="padding: 0.9rem 2.25rem;">
+        &larr; Return to Student Dashboard
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

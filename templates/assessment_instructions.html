@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ assessment.title }} — Test Instructions | AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .instructions-container {
+    max-width: 900px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+  }
+
+  .instructions-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .instructions-header {
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .header-top h1 {
+    font-size: 1.9rem;
+    color: #ffffff;
+    line-height: 1.25;
+  }
+
+  .badges-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .badge-subject {
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    color: #c7d2fe;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+  }
+
+  .badge-type {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #6ee7b7;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .info-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.1rem;
+    text-align: center;
+    transition: var(--transition);
+  }
+
+  .info-box:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .info-box .icon {
+    font-size: 1.6rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .info-box .label {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  .info-box .val {
+    font-size: 1.25rem;
+    color: #ffffff;
+    font-weight: 700;
+    margin-top: 0.2rem;
+  }
+
+  .rules-section {
+    background: rgba(239, 68, 68, 0.04);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: var(--radius-md);
+    padding: 1.75rem;
+    margin-bottom: 2rem;
+  }
+
+  .rules-section h3 {
+    color: #fca5a5;
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    font-size: 0.92rem;
+    color: #e2e8f0;
+    line-height: 1.5;
+  }
+
+  .rule-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .rule-item strong {
+    color: #ffffff;
+  }
+
+  .strike-badge {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .agreement-box {
+    background: rgba(99, 102, 241, 0.05);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .agreement-box input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: var(--primary);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .agreement-box label {
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: #ffffff;
+    font-weight: 500;
+    user-select: none;
+  }
+
+  .resume-alert {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fcd34d;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.75rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .camera-check-section {
+    background: rgba(99, 102, 241, 0.05);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="instructions-container">
+  <div class="instructions-card">
+    <div class="instructions-header">
+      <div class="header-top">
+        <h1>📝 Test Instructions &amp; Readiness</h1>
+        {% if assessment.academic_type == 'school' %}
+          <a href="{% url 'student_school_zone' %}" class="btn btn-secondary btn-sm">&larr; Back to School Zone</a>
+        {% else %}
+          <a href="{% url 'student_college_zone' %}" class="btn btn-secondary btn-sm">&larr; Back to College Zone</a>
+        {% endif %}
+      </div>
+      <div class="badges-row">
+        <span class="badge-subject">{{ assessment.subject }}</span>
+        <span class="badge-type">{{ assessment.get_academic_type_display }}</span>
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Assessment ID: #{{ assessment.id }}</span>
+      </div>
+    </div>
+
+    <!-- Active In-Progress Attempt Notice -->
+    {% if active_attempt %}
+      <div class="resume-alert">
+        <span style="font-size: 1.3rem;">⚡</span>
+        <div>
+          <strong>Active Attempt Detected:</strong> You have an ongoing session for this assessment started at 
+          {{ active_attempt.started_at|date:"M d, H:i" }}. Clicking Start will resume your session right where you left off.
+        </div>
+      </div>
+    {% endif %}
+
+    <div id="error-box"></div>
+
+    <!-- Overview Stats Grid -->
+    <div class="info-grid">
+      <div class="info-box">
+        <div class="icon">🎯</div>
+        <div class="label">Target Questions</div>
+        <div class="val">{{ target_questions }} Items</div>
+      </div>
+      <div class="info-box">
+        <div class="icon">⏱️</div>
+        <div class="label">Time Allocated</div>
+        <div class="val">{{ duration_minutes }} Mins</div>
+      </div>
+      <div class="info-box">
+        <div class="icon">🧠</div>
+        <div class="label">Test Mode</div>
+        <div class="val">Adaptive</div>
+      </div>
+      <div class="info-box">
+        <div class="icon">🛡️</div>
+        <div class="label">Proctoring</div>
+        <div class="val">Strict 3-Strike</div>
+      </div>
+    </div>
+
+    <!-- Anti-Cheat 3-Strike Policy -->
+    <div class="rules-section">
+      <h3>
+        <span>⚠️</span> Anti-Cheat &amp; Integrity Policy (3-Strike Rule)
+      </h3>
+      <div class="rules-list">
+        <div class="rule-item">
+          <span class="strike-badge">Rule 1</span>
+          <div>
+            <strong>Fullscreen Mode Required:</strong> The test runs exclusively in full-screen. Exiting full-screen will trigger an immediate warning strike.
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="strike-badge">Rule 2</span>
+          <div>
+            <strong>No Tab Switching or Minimizing:</strong> Navigating away from the test tab, switching apps (Alt+Tab), or losing window focus is detected instantly and logged as an infraction.
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="strike-badge">Rule 3</span>
+          <div>
+            <strong>Clipboard &amp; Shortcuts Disabled:</strong> Copying question text, right-clicking, pasting, and developer tool shortcuts (F12, Ctrl+U) are blocked.
+          </div>
+        </div>
+        <div class="rule-item">
+          <span class="strike-badge" style="background: rgba(239, 68, 68, 0.4); color: #ffffff;">Auto-Termination</span>
+          <div>
+            <strong>3-Strike Policy:</strong> If you trigger <strong>3 integrity infractions</strong>, the test will be <strong>terminated immediately</strong> and recorded as an integrity violation in your academic record.
+          </div>
+        </div>
+      </div>
+    <!-- Live Video Proctoring Check -->
+    <div class="camera-check-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <div>
+          <h4 style="margin: 0; font-size: 1.05rem; color: #c7d2fe; display: flex; align-items: center; gap: 0.5rem;">
+            <span>📹</span> Live Video Proctoring Check
+          </h4>
+          <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+            A floating proctor webcam widget will accompany your exam to ensure remote testing integrity.
+          </p>
+        </div>
+        <button type="button" id="test-camera-btn" class="btn btn-secondary btn-sm" onclick="testWebcamReadiness()">
+          📷 Test Camera Feed
+        </button>
+      </div>
+
+      <div id="camera-preview-box" style="display: none; margin-top: 1rem; text-align: center;">
+        <video id="instructions-video-preview" autoplay playsinline muted style="width: 200px; height: 150px; object-fit: cover; border-radius: var(--radius-md); border: 2px solid #10b981; transform: scaleX(-1);"></video>
+        <div id="camera-status-msg" style="margin-top: 0.5rem; font-size: 0.85rem; color: #6ee7b7; font-weight: 600;">
+          ✅ Camera verified! Your video proctor feed is ready for the exam.
+        </div>
+      </div>
+    </div>
+
+    <!-- Agreement Form -->
+    <form id="start-assessment-form">
+      {% csrf_token %}
+      <input type="hidden" name="assessment_id" value="{{ assessment.id }}">
+
+      <div class="agreement-box">
+        <input type="checkbox" id="accept-rules" required>
+        <label for="accept-rules">
+          I understand that exiting fullscreen or switching tabs will trigger integrity warnings, and I agree to abide strictly by the anti-cheat integrity rules.
+        </label>
+      </div>
+
+      <button type="submit" id="start-btn" class="btn btn-primary" style="width: 100%; padding: 1.1rem; font-size: 1.1rem; font-weight: 700;">
+        {% if active_attempt %}
+          ⚡ Resume Assessment Now &rarr;
+        {% else %}
+          🚀 Start Assessment (Enter Fullscreen) &rarr;
+        {% endif %}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let streamTested = null;
+  async function testWebcamReadiness() {
+    const previewBox = document.getElementById('camera-preview-box');
+    const video = document.getElementById('instructions-video-preview');
+    const btn = document.getElementById('test-camera-btn');
+    const msg = document.getElementById('camera-status-msg');
+
+    btn.disabled = true;
+    btn.textContent = 'Accessing Camera...';
+
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        streamTested = await navigator.mediaDevices.getUserMedia({
+          video: { width: 320, height: 240, facingMode: 'user' },
+          audio: false
+        });
+        video.srcObject = streamTested;
+        previewBox.style.display = 'block';
+        btn.textContent = '✅ Camera Ready';
+        msg.innerHTML = '✅ Camera stream verified! It will be displayed in the live exam room.';
+      } else {
+        previewBox.style.display = 'block';
+        msg.innerHTML = 'ℹ️ Webcam API not supported in this browser. Exam will proceed with system integrity monitoring.';
+        btn.textContent = 'Camera Offline';
+      }
+    } catch (err) {
+      previewBox.style.display = 'block';
+      msg.innerHTML = '⚠️ Camera permission was not granted. You may still proceed with standard full-screen proctoring.';
+      btn.textContent = 'Camera Skipped';
+    }
+  }
+
+  const form = document.getElementById('start-assessment-form');
+  const checkbox = document.getElementById('accept-rules');
+  const startBtn = document.getElementById('start-btn');
+  const errorBox = document.getElementById('error-box');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.innerHTML = '';
+
+    // Stop instructions test stream before navigating into exam
+    if (streamTested) {
+      streamTested.getTracks().forEach(t => t.stop());
+      streamTested = null;
+    }
+
+    if (!checkbox.checked) {
+      errorBox.innerHTML = `
+        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+          <span>❌ You must acknowledge and agree to the integrity rules before starting.</span>
+        </div>
+      `;
+      return;
+    }
+
+    startBtn.disabled = true;
+    startBtn.textContent = 'Initializing Secure Test Session...';
+
+    // Request native fullscreen before navigation
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else if (document.documentElement.webkitRequestFullscreen) {
+        await document.documentElement.webkitRequestFullscreen();
+      } else if (document.documentElement.msRequestFullscreen) {
+        await document.documentElement.msRequestFullscreen();
+      }
+    } catch (fsErr) {
+      console.warn("Fullscreen request was dismissed or blocked:", fsErr);
+    }
+
+    try {
+      const response = await fetch('/api/assessments/start-attempt/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+          assessment_id: {{ assessment.id }}
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        window.location.href = data.redirect_url;
+      } else {
+        startBtn.disabled = false;
+        startBtn.textContent = '🚀 Start Assessment (Enter Fullscreen) →';
+        errorBox.innerHTML = `
+          <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+            <span>❌ Failed to start assessment: ${data.error || 'Unknown error'}</span>
+          </div>
+        `;
+      }
+    } catch (err) {
+      startBtn.disabled = false;
+      startBtn.textContent = '🚀 Start Assessment (Enter Fullscreen) →';
+      errorBox.innerHTML = `
+        <div class="alert alert-error" style="margin-bottom: 1.5rem;">
+          <span>❌ Network error: ${err.message}</span>
+        </div>
+      `;
+    }
+  });
+</script>
+{% endblock %}

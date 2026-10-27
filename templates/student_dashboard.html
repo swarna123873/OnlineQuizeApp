@@ -1,0 +1,517 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Student Hub — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dashboard-header {
+    padding: 2.5rem 2rem 1.5rem;
+    max-width: 1150px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .dashboard-title {
+    font-size: 2.2rem;
+  }
+
+  .dashboard-subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  /* Navigation Tabs */
+  .dash-tabs-container {
+    max-width: 1150px;
+    margin: 2rem auto 0;
+    padding: 0 2rem;
+    display: flex;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .dash-tab-btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0.85rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dash-tab-btn:hover {
+    color: #ffffff;
+  }
+
+  .dash-tab-btn.active {
+    color: #818cf8;
+    border-bottom-color: #6366f1;
+  }
+
+  .tab-badge {
+    background: rgba(99, 102, 241, 0.2);
+    color: #c7d2fe;
+    font-size: 0.75rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 9999px;
+  }
+
+  /* Content sections */
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active {
+    display: block;
+  }
+
+  .zones-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.75rem;
+    max-width: 1150px;
+    margin: 2.5rem auto;
+    padding: 0 2rem;
+  }
+
+  .zone-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2.25rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .zone-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 15px 35px -10px rgba(99, 102, 241, 0.25);
+  }
+
+  .zone-card.disabled {
+    opacity: 0.75;
+  }
+
+  .zone-card.disabled:hover {
+    transform: none;
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+
+  .zone-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .zone-badge {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+  }
+
+  .badge-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .badge-future {
+    background: rgba(156, 163, 175, 0.15);
+    color: #9ca3af;
+    border: 1px solid rgba(156, 163, 175, 0.3);
+  }
+
+  .zone-title {
+    font-size: 1.35rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .zone-desc {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    flex: 1;
+  }
+
+  /* History Tab Styles */
+  .history-container {
+    max-width: 1150px;
+    margin: 2.5rem auto;
+    padding: 0 2rem;
+  }
+
+  .summary-metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .summary-stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+  }
+
+  .stat-icon {
+    font-size: 2.2rem;
+  }
+
+  .stat-val {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffffff;
+  }
+
+  .stat-lbl {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .attempt-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 1.75rem 2rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    transition: var(--transition);
+  }
+
+  .attempt-card:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.5);
+  }
+
+  .attempt-main-info {
+    flex: 2;
+    min-width: 250px;
+  }
+
+  .attempt-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    color: #ffffff;
+  }
+
+  .attempt-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .attempt-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+    flex-wrap: wrap;
+  }
+
+  .stat-pill-box {
+    text-align: center;
+    min-width: 80px;
+  }
+
+  .stat-pill-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+
+  .stat-pill-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+  }
+
+  .val-correct { color: #6ee7b7; }
+  .val-wrong { color: #f87171; }
+  .val-theta { color: #a5b4fc; }
+  .val-time { color: #fbbf24; }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+  <div>
+    <h1 class="dashboard-title">Student Learning Hub</h1>
+    <p class="dashboard-subtitle">Adaptive assessments tailored to your curriculum, post-test analytics, and personalized guidance</p>
+  </div>
+  <div>
+    <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #c7d2fe; padding: 0.4rem 0.8rem; border-radius: 9999px; font-size: 0.85rem; border: 1px solid rgba(99, 102, 241, 0.3);">
+      Role: Student
+    </span>
+  </div>
+</div>
+
+<!-- Tabs Navigation -->
+<div class="dash-tabs-container">
+  <button id="tabBtnZones" class="dash-tab-btn active" onclick="switchDashboardTab('zones')">
+    <span>🎯</span> Take Assessment (Zones)
+  </button>
+  <button id="tabBtnHistory" class="dash-tab-btn" onclick="switchDashboardTab('history')">
+    <span>📊</span> Previously Attempted Tests & Results
+    <span class="tab-badge">{{ attempts|length }}</span>
+  </button>
+</div>
+
+<!-- TAB 1: ASSESSMENT ZONES -->
+<div id="tabZones" class="tab-pane active">
+  <div class="zones-grid">
+    <!-- Zone 1: School Zone -->
+    <div class="zone-card">
+      <span class="zone-badge badge-active">Available</span>
+      <div class="zone-icon">🏫</div>
+      <h2 class="zone-title">School Zone</h2>
+      <p class="zone-desc">
+        Adaptive testing for school curricula (CBSE, ICSE, State Boards). Select your school, board, standard, and subject.
+      </p>
+      <a href="{% url 'student_school_zone' %}" class="btn btn-primary">
+        Enter School Zone &rarr;
+      </a>
+    </div>
+
+    <!-- Zone 2: College Zone -->
+    <div class="zone-card">
+      <span class="zone-badge badge-active">Available</span>
+      <div class="zone-icon">🏛️</div>
+      <h2 class="zone-title">College Zone</h2>
+      <p class="zone-desc">
+        Adaptive testing for university courses. Select your college, degree, academic year, branch, and subject.
+      </p>
+      <a href="{% url 'student_college_zone' %}" class="btn btn-primary">
+        Enter College Zone &rarr;
+      </a>
+    </div>
+
+    <!-- Zone 3: Competitive Exam Zone (Placeholder) -->
+    <div class="zone-card disabled">
+      <span class="zone-badge badge-future">Coming in a future phase</span>
+      <div class="zone-icon">🏆</div>
+      <h2 class="zone-title">Competitive Exam Zone</h2>
+      <p class="zone-desc">
+        National and state-level competitive exams (JEE, NEET, GATE, UPSC, Banking, GRE/GMAT).
+      </p>
+      <button class="btn btn-secondary" onclick="alert('Competitive Exam Zone is coming in a future phase.');">
+        Coming Soon
+      </button>
+    </div>
+
+    <!-- Zone 4: Recruitment & Technical Assessment Zone (Placeholder) -->
+    <div class="zone-card disabled">
+      <span class="zone-badge badge-future">Coming in a future phase</span>
+      <div class="zone-icon">💼</div>
+      <h2 class="zone-title">Recruitment & Technical</h2>
+      <p class="zone-desc">
+        Job screening, technical interviews, and coding assessment benchmarks.
+      </p>
+      <button class="btn btn-secondary" onclick="alert('Recruitment & Technical Assessment Zone is coming in a future phase.');">
+        Coming Soon
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 2: PREVIOUSLY ATTEMPTED TESTS & RESULTS -->
+<div id="tabHistory" class="tab-pane">
+  <div class="history-container">
+    <!-- Summary Stat Cards -->
+    <div class="summary-metrics-row">
+      <div class="summary-stat-card">
+        <div class="stat-icon">📝</div>
+        <div>
+          <div class="stat-val">{{ total_completed }}</div>
+          <div class="stat-lbl">Completed Tests</div>
+        </div>
+      </div>
+      <div class="summary-stat-card">
+        <div class="stat-icon">🎯</div>
+        <div>
+          <div class="stat-val">{{ avg_accuracy }}%</div>
+          <div class="stat-lbl">Average Accuracy</div>
+        </div>
+      </div>
+      <div class="summary-stat-card">
+        <div class="stat-icon">🧠</div>
+        <div>
+          <div class="stat-val">
+            {% if latest_theta is not None %}
+              {{ latest_theta|floatformat:2 }}
+            {% else %}
+              0.00
+            {% endif %}
+          </div>
+          <div class="stat-lbl">Latest IRT Ability (&theta;)</div>
+        </div>
+      </div>
+    </div>
+
+    {% if attempts %}
+      <div class="attempts-list">
+        {% for attempt in attempts %}
+          <div class="attempt-card">
+            <div class="attempt-main-info">
+              <div class="attempt-title">{{ attempt.assessment.title }}</div>
+              <div class="attempt-meta">
+                <span>📚 {{ attempt.assessment.subject|default:"Curriculum Test" }}</span>
+                <span>📅 {{ attempt.started_at|date:"M d, Y · H:i" }}</span>
+                {% if attempt.status == 'completed' %}
+                  <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3);">
+                    Completed
+                  </span>
+                {% elif attempt.status == 'terminated' %}
+                  <span class="badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    Terminated (Integrity Violation)
+                  </span>
+                {% else %}
+                  <span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    In Progress
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Stats Row: Score, Correct, Wrong, Time Taken, Ability -->
+            <div class="attempt-stats-row">
+              <div class="stat-pill-box">
+                <div class="stat-pill-label">Score</div>
+                <div class="stat-pill-val val-correct">{{ attempt.raw_score|default:0 }}/10</div>
+              </div>
+              <div class="stat-pill-box">
+                <div class="stat-pill-label">Accuracy</div>
+                <div class="stat-pill-val">{{ attempt.accuracy|default:0 }}%</div>
+              </div>
+              <div class="stat-pill-box">
+                <div class="stat-pill-label">Time Taken</div>
+                <div class="stat-pill-val val-time">⏱️ {{ attempt.duration_formatted }}</div>
+              </div>
+              <div class="stat-pill-box">
+                <div class="stat-pill-label">Ability &theta;</div>
+                <div class="stat-pill-val val-theta">
+                  {% if attempt.final_theta is not None %}
+                    {{ attempt.final_theta|floatformat:2 }}
+                  {% else %}
+                    &mdash;
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Action Link -->
+              <div>
+                {% if attempt.status == 'completed' %}
+                  <a href="{% url 'student_assessment_completed' attempt.id %}" class="btn btn-primary" style="padding: 0.65rem 1.25rem; font-size: 0.88rem;">
+                    View Detailed Results &rarr;
+                  </a>
+                {% elif attempt.status == 'in_progress' %}
+                  <a href="{% url 'student_assessment_exam' attempt.id %}" class="btn btn-primary" style="padding: 0.65rem 1.25rem; font-size: 0.88rem; background: #f59e0b; border-color: #f59e0b;">
+                    Resume Test &rarr;
+                  </a>
+                {% else %}
+                  <a href="{% url 'student_assessment_terminated' attempt.id %}" class="btn btn-secondary" style="padding: 0.65rem 1.25rem; font-size: 0.88rem;">
+                    View Incident &rarr;
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <h3>No Attempted Assessments Yet</h3>
+        <p style="color: var(--text-muted); max-width: 500px; margin: 0.5rem auto 1.5rem auto;">
+          You haven't taken any assessments yet. Visit the School Zone or College Zone to start your first adaptive test!
+        </p>
+        <button class="btn btn-primary" onclick="switchDashboardTab('zones')">
+          Browse Assessment Zones &rarr;
+        </button>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  function switchDashboardTab(tabName) {
+    const zonesBtn = document.getElementById('tabBtnZones');
+    const historyBtn = document.getElementById('tabBtnHistory');
+    const zonesPane = document.getElementById('tabZones');
+    const historyPane = document.getElementById('tabHistory');
+
+    if (tabName === 'history') {
+      zonesBtn.classList.remove('active');
+      historyBtn.classList.add('active');
+      zonesPane.classList.remove('active');
+      historyPane.classList.add('active');
+      window.location.hash = 'history';
+    } else {
+      historyBtn.classList.remove('active');
+      zonesBtn.classList.add('active');
+      historyPane.classList.remove('active');
+      zonesPane.classList.add('active');
+      window.location.hash = 'zones';
+    }
+  }
+
+  // Auto-switch tab if URL contains #history
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.location.hash === '#history') {
+      switchDashboardTab('history');
+    }
+  });
+</script>
+{% endblock %}

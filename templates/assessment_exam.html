@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ assessment.title }} — Live Test Zone | AdaptIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <style>
+    body {
+      background: #090d16;
+      color: #f8fafc;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sticky Command Bar */
+    .exam-header {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .exam-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .exam-title-badge {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .exam-subject-badge {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      color: #c7d2fe;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+    }
+
+    .progress-section {
+      flex: 1;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .progress-bar-bg {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.3s ease;
+    }
+
+    .exam-controls {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .proctor-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+    }
+
+    .proctor-badge.has-warnings {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fcd34d;
+    }
+
+    .timer-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      padding: 0.35rem 0.85rem;
+      border-radius: var(--radius-sm);
+      color: #6ee7b7;
+      letter-spacing: 0.05em;
+    }
+
+    .timer-badge.warning {
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.5);
+    }
+
+    .timer-badge.critical {
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.5);
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Question Container */
+    .exam-main {
+      flex: 1;
+      max-width: 880px;
+      width: 100%;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+      box-sizing: border-box;
+    }
+
+    .question-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-card);
+    }
+
+    .question-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .seq-tag {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .topic-pill {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #c7d2fe;
+      background: rgba(99, 102, 241, 0.12);
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+    }
+
+    .question-text {
+      font-size: 1.35rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .option-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 1.15rem 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s ease;
+    }
+
+    .option-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(99, 102, 241, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .option-card.selected {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: #818cf8;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.25);
+    }
+
+    .opt-letter {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .option-card.selected .opt-letter {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .opt-text {
+      font-size: 1.05rem;
+      color: #f1f5f9;
+      line-height: 1.45;
+      flex: 1;
+    }
+
+    .exam-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .key-hints {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    .key-hints kbd {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-family: inherit;
+      color: #ffffff;
+    }
+
+    /* Warning Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 25, 0.92);
+      backdrop-filter: blur(16px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-card {
+      background: #1e1b4b;
+      border: 2px solid #ef4444;
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 50px rgba(239, 68, 68, 0.35);
+      animation: modalPop 0.25s ease-out;
+    }
+
+    @keyframes modalPop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      color: #ffffff;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .modal-msg {
+      color: #cbd5e1;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.75rem;
+    }
+
+    .modal-warning-badge {
+      display: inline-block;
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      color: #fca5a5;
+      font-weight: 800;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* Floating Proctoring Webcam Widget */
+    .webcam-proctor-widget {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 99;
+      width: 175px;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(99, 102, 241, 0.4);
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(99, 102, 241, 0.2);
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .webcam-proctor-widget.minimized {
+      width: 165px;
+    }
+
+    .webcam-proctor-widget.minimized .webcam-video-container {
+      display: none;
+    }
+
+    .webcam-header {
+      padding: 0.4rem 0.65rem;
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .webcam-status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #6ee7b7;
+      letter-spacing: 0.05em;
+    }
+
+    .rec-dot {
+      width: 7px;
+      height: 7px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 8px #10b981;
+      animation: blinkRec 1.5s infinite;
+    }
+
+    @keyframes blinkRec {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .webcam-min-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0.1rem 0.3rem;
+      border-radius: 4px;
+      transition: var(--transition);
+    }
+
+    .webcam-min-btn:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .webcam-video-container {
+      position: relative;
+      width: 100%;
+      height: 125px;
+      background: #020617;
+      overflow: hidden;
+    }
+
+    #proctorVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleX(-1);
+    }
+
+    .webcam-placeholder {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #020617;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Exam Command Bar -->
+  <header class="exam-header">
+    <div class="exam-info">
+      <span class="exam-title-badge">{{ assessment.title }}</span>
+      <span class="exam-subject-badge">{{ assessment.subject }}</span>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-labels">
+        <span>Question {{ question_sequence }} of {{ target_questions }}</span>
+        <span>{{ question_sequence }}0% Complete</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: {{ question_sequence }}0%;"></div>
+      </div>
+    </div>
+
+    <div class="exam-controls">
+      <div class="proctor-badge {% if warning_count > 0 %}has-warnings{% endif %}" id="proctor-badge">
+        <span>🛡️</span>
+        <span>Proctoring Active</span>
+        <span id="strike-count-display">({{ warning_count }}/{{ warning_limit }} Strikes)</span>
+      </div>
+
+      <div class="timer-badge" id="timer-display">--:--</div>
+    </div>
+  </header>
+
+  <!-- Question Section -->
+  <main class="exam-main">
+    <div class="question-card">
+      <div class="question-meta">
+        <span class="seq-tag">Question {{ question_sequence }} of {{ target_questions }}</span>
+        <span class="topic-pill">{{ active_question.topic }}</span>
+      </div>
+
+      <div class="question-text">
+        {{ active_question.question_text }}
+      </div>
+
+      <form id="response-form">
+        {% csrf_token %}
+        <input type="hidden" name="attempt_id" value="{{ attempt.id }}">
+        <input type="hidden" name="question_id" value="{{ active_question.id }}">
+        <input type="hidden" name="selected_option" id="selected_option" value="">
+
+        <div class="options-list">
+          <div class="option-card" data-opt="A" onclick="chooseOption('A')">
+            <div class="opt-letter">A</div>
+            <div class="opt-text">{{ active_question.option_a }}</div>
+          </div>
+          <div class="option-card" data-opt="B" onclick="chooseOption('B')">
+            <div class="opt-letter">B</div>
+            <div class="opt-text">{{ active_question.option_b }}</div>
+          </div>
+          <div class="option-card" data-opt="C" onclick="chooseOption('C')">
+            <div class="opt-letter">C</div>
+            <div class="opt-text">{{ active_question.option_c }}</div>
+          </div>
+          <div class="option-card" data-opt="D" onclick="chooseOption('D')">
+            <div class="opt-letter">D</div>
+            <div class="opt-text">{{ active_question.option_d }}</div>
+          </div>
+        </div>
+
+        <div class="exam-actions">
+          <div class="key-hints">
+            Tip: Press <kbd>1</kbd>-<kbd>4</kbd> or <kbd>A</kbd>-<kbd>D</kbd> to choose &bull; <kbd>Enter</kbd> to submit
+          </div>
+          <button type="submit" id="submit-btn" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1.05rem;" disabled>
+            Submit &amp; Next Question &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- Anti-Cheat Warning Modal -->
+  <div class="modal-overlay" id="warning-modal">
+    <div class="modal-card">
+      <div class="modal-icon">⚠️</div>
+      <div class="modal-title">Integrity Violation Detected</div>
+      <div class="modal-warning-badge" id="modal-warning-badge">Warning 1 of 3 Strikes</div>
+      <p class="modal-msg" id="modal-msg">
+        Exiting fullscreen or switching browser tabs is strictly prohibited during proctored assessments.
+      </p>
+      <button type="button" class="btn btn-primary" id="resume-btn" style="width: 100%; padding: 0.95rem;">
+        Return to Fullscreen &amp; Continue Test
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Live Proctoring Webcam Widget -->
+  <div id="webcamProctorWidget" class="webcam-proctor-widget">
+    <div class="webcam-header">
+      <div class="webcam-status-pill">
+        <span class="rec-dot"></span>
+        <span id="webcamStatusText">PROCTOR ACTIVE</span>
+      </div>
+      <button type="button" class="webcam-min-btn" onclick="toggleWebcamWidget()" title="Minimize / Expand Video">
+        <span id="webcamMinIcon">&minus;</span>
+      </button>
+    </div>
+    <div class="webcam-video-container" id="webcamContainer">
+      <video id="proctorVideo" autoplay playsinline muted></video>
+      <div id="webcamPlaceholder" class="webcam-placeholder">
+        <span style="font-size: 1.5rem;">📷</span>
+        <p style="margin: 0.25rem 0 0; font-size: 0.72rem; color: #94a3b8;">Camera Initializing...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const attemptId = {{ attempt.id }};
+    let remainingSeconds = {{ remaining_seconds }};
+    let warningCount = {{ warning_count }};
+    const warningLimit = {{ warning_limit }};
+    let selectedOption = '';
+    let isTerminated = false;
+    let isSubmitting = false;
+
+    // --- 1. Synchronized Countdown Timer ---
+    const timerDisplay = document.getElementById('timer-display');
+    function updateTimer() {
+      if (remainingSeconds <= 0) {
+        timerDisplay.textContent = '00:00';
+        handleTimeExpired();
+        return;
+      }
+
+      const mins = Math.floor(remainingSeconds / 60);
+      const secs = remainingSeconds % 60;
+      timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      if (remainingSeconds <= 60) {
+        timerDisplay.className = 'timer-badge critical';
+      } else if (remainingSeconds <= 300) {
+        timerDisplay.className = 'timer-badge warning';
+      } else {
+        timerDisplay.className = 'timer-badge';
+      }
+
+      remainingSeconds--;
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    function handleTimeExpired() {
+      clearInterval(timerInterval);
+      alert("⏱️ Time allocated for this assessment has expired. Your test will now be submitted.");
+      window.location.href = `/student/assessment/${attemptId}/completed/`;
+    }
+
+    // --- 2. Option Selection & Submission ---
+    const submitBtn = document.getElementById('submit-btn');
+    const hiddenInput = document.getElementById('selected_option');
+
+    window.chooseOption = function(opt) {
+      if (isSubmitting || isTerminated) return;
+      selectedOption = opt;
+      hiddenInput.value = opt;
+      document.querySelectorAll('.option-card').forEach(c => {
+        if (c.dataset.opt === opt) {
+          c.classList.add('selected');
+        } else {
+          c.classList.remove('selected');
+        }
+      });
+      submitBtn.disabled = false;
+    };
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (isSubmitting || isTerminated) return;
+      const key = e.key.toUpperCase();
+      if (['A', 'B', 'C', 'D'].includes(key)) {
+        chooseOption(key);
+      } else if (['1', '2', '3', '4'].includes(e.key)) {
+        const mapping = {'1': 'A', '2': 'B', '3': 'C', '4': 'D'};
+        chooseOption(mapping[e.key]);
+      } else if (e.key === 'Enter' && selectedOption && !submitBtn.disabled) {
+        document.getElementById('response-form').dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    });
+
+    document.getElementById('response-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!selectedOption || isSubmitting || isTerminated) return;
+
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const res = await fetch('/api/assessments/submit-response/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: JSON.stringify({
+            attempt_id: attemptId,
+            question_id: {{ active_question.id }},
+            selected_option: selectedOption
+          })
+        });
+
+        const data = await res.json();
+        if (data.redirect_url) {
+          window.location.href = data.redirect_url;
+        } else {
+          window.location.reload();
+        }
+      } catch (err) {
+        alert("Error submitting answer: " + err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit & Next Question →';
+        isSubmitting = false;
+      }
+    });
+
+    // --- 3. Anti-Cheat & 3-Strike Integrity Proctoring ---
+    const warningModal = document.getElementById('warning-modal');
+    const modalBadge = document.getElementById('modal-warning-badge');
+    const modalMsg = document.getElementById('modal-msg');
+    const resumeBtn = document.getElementById('resume-btn');
+    const proctorBadge = document.getElementById('proctor-badge');
+    const strikeDisplay = document.getElementById('strike-count-display');
+
+    let violationCooldown = false;
+
+    async function reportViolation(eventType, description) {
+      if (isSubmitting || isTerminated || violationCooldown) return;
+      if (warningModal && warningModal.style.display === 'flex') return;
+
+      violationCooldown = true;
+      setTimeout(() => { violationCooldown = false; }, 2000);
+
+      try {
+        const res = await fetch('/api/assessments/integrity-warning/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: JSON.stringify({
+            attempt_id: attemptId,
+            event_type: eventType
+          })
+        });
+
+        const data = await res.json();
+        warningCount = data.warning_count;
+
+        strikeDisplay.textContent = `(${warningCount}/${warningLimit} Strikes)`;
+        proctorBadge.classList.add('has-warnings');
+
+        if (data.terminated) {
+          isTerminated = true;
+          clearInterval(timerInterval);
+          alert("⚠️ Maximum integrity violations exceeded (3 strikes). Your assessment has been terminated.");
+          window.location.href = `/student/assessment/${attemptId}/terminated/`;
+          return;
+        }
+
+        if (warningCount === 1) {
+          modalBadge.textContent = 'Warning 1 of 3 Strikes';
+          modalMsg.innerHTML = `<strong>⚠️ Warning 1 of 3:</strong> ${description}<br><br>Return to fullscreen to continue.`;
+        } else if (warningCount === 2) {
+          modalBadge.textContent = 'Warning 2 of 3 Strikes (FINAL WARNING)';
+          modalMsg.innerHTML = `<strong>⚠️ Final warning!</strong> One more infraction will immediately terminate your exam.<br><br>Return to fullscreen to continue.`;
+        } else {
+          modalBadge.textContent = `Warning ${warningCount} of ${warningLimit} Strikes`;
+          modalMsg.innerHTML = `<strong>${description}</strong><br><br>Return to fullscreen to continue.`;
+        }
+        warningModal.style.display = 'flex';
+      } catch (err) {
+        console.error("Failed to log integrity infraction:", err);
+      }
+    }
+
+    // Resume button from warning modal
+    resumeBtn.addEventListener('click', async () => {
+      try {
+        if (!document.fullscreenElement) {
+          if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen();
+          }
+        }
+      } catch (e) {
+        console.warn("Fullscreen resume dismissed:", e);
+      }
+      warningModal.style.display = 'none';
+      violationCooldown = true;
+      setTimeout(() => { violationCooldown = false; }, 1200);
+    });
+
+    // 1. Fullscreen exit detection
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement && !isSubmitting && !isTerminated) {
+        reportViolation('fullscreen_exit', 'You have exited full-screen mode.');
+      }
+    });
+
+    // 2. Tab switch / Window blur detection
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && !isSubmitting && !isTerminated) {
+        reportViolation('tab_switch', 'You navigated away from the assessment tab.');
+      }
+    });
+
+    window.addEventListener('blur', () => {
+      // 100ms delay gives visibilitychange precedence when switching tabs
+      setTimeout(() => {
+        if (!isSubmitting && !isTerminated && !document.hidden && !violationCooldown) {
+          if (warningModal && warningModal.style.display !== 'flex') {
+            reportViolation('tab_switch', 'Window focus lost. Please stay focused on the test interface.');
+          }
+        }
+      }, 100);
+    });
+
+    // 3. Block Right-click, Copy, Paste, Cut, and Inspect Shortcuts
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => {
+      e.preventDefault();
+      reportViolation('clipboard_attempt', 'Copying question content is prohibited.');
+    });
+    document.addEventListener('paste', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+
+    document.addEventListener('keydown', e => {
+      // F12 or Ctrl+Shift+I or Ctrl+U
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'u')) {
+        e.preventDefault();
+        reportViolation('clipboard_attempt', 'Opening developer tools is prohibited.');
+      }
+    });
+
+    // --- 7. Live Proctoring Webcam Stream ---
+    let proctorStream = null;
+
+    async function initWebcamProctor() {
+      const video = document.getElementById('proctorVideo');
+      const placeholder = document.getElementById('webcamPlaceholder');
+      const statusText = document.getElementById('webcamStatusText');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (placeholder) {
+          placeholder.innerHTML = '<span style="font-size:1.2rem;">🛡️</span><p style="margin:0.25rem 0 0;font-size:0.7rem;color:#94a3b8;">Integrity Monitored</p>';
+        }
+        if (statusText) statusText.textContent = 'MONITORED';
+        return;
+      }
+
+      try {
+        proctorStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 320, height: 240, facingMode: 'user' },
+          audio: false
+        });
+
+        if (video) {
+          video.srcObject = proctorStream;
+          video.onloadedmetadata = () => {
+            video.play().catch(e => console.warn('Auto-play prevented:', e));
+            if (placeholder) placeholder.style.display = 'none';
+          };
+        }
+      } catch (err) {
+        console.warn('Webcam permission not granted or device absent:', err);
+        if (placeholder) {
+          placeholder.innerHTML = '<span style="font-size:1.2rem;">🛡️</span><p style="margin:0.25rem 0 0;font-size:0.7rem;color:#94a3b8;">Proctored (No Cam)</p>';
+        }
+        if (statusText) statusText.textContent = 'PROCTORED';
+      }
+    }
+
+    function toggleWebcamWidget() {
+      const widget = document.getElementById('webcamProctorWidget');
+      const icon = document.getElementById('webcamMinIcon');
+      if (widget) {
+        widget.classList.toggle('minimized');
+        if (icon) {
+          icon.innerHTML = widget.classList.contains('minimized') ? '&plus;' : '&minus;';
+        }
+      }
+    }
+
+    function stopWebcam() {
+      if (proctorStream) {
+        proctorStream.getTracks().forEach(track => track.stop());
+        proctorStream = null;
+      }
+    }
+    window.addEventListener('beforeunload', stopWebcam);
+
+    // Initialize webcam when exam loads
+    initWebcamProctor();
+  </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}College Zone — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .zone-container {
+    max-width: 860px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+  }
+
+  .zone-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .zone-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 1.25rem;
+  }
+
+  .zone-header h1 {
+    font-size: 1.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .zone-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .assessment-result-card {
+    margin-top: 2rem;
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .result-title {
+    font-size: 1.35rem;
+    color: #ffffff;
+    margin-bottom: 0.4rem;
+  }
+
+  .result-meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="zone-container">
+  <div class="zone-card">
+    <div class="zone-header">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <h1>🏛️ College Zone Assessment</h1>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <a href="{% url 'student_dashboard' %}#history" class="btn btn-secondary btn-sm" style="border-color: rgba(99, 102, 241, 0.4); color: #c7d2fe;">📊 Previous Attempts</a>
+          <a href="{% url 'student_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Zones</a>
+        </div>
+      </div>
+      <p>Select your university academic path. All options are dynamically queried from educator database records.</p>
+    </div>
+
+    <div id="message-container"></div>
+
+    <form id="college-match-form">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="college_name" class="form-label">College / University Name *</label>
+        <select id="college_name" name="college_name" class="form-input" required>
+          <option value="">-- Loading registered colleges... --</option>
+        </select>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="degree" class="form-label">Degree / Course *</label>
+          <select id="degree" name="degree" class="form-input" required disabled>
+            <option value="">-- Select College first --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="academic_year" class="form-label">Academic Year *</label>
+          <select id="academic_year" name="academic_year" class="form-input" required disabled>
+            <option value="">-- Select Degree first --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="branch" class="form-label">Branch / Specialization *</label>
+          <select id="branch" name="branch" class="form-input" required disabled>
+            <option value="">-- Select Year first --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="subject" class="form-label">Subject *</label>
+          <select id="subject" name="subject" class="form-input" required disabled>
+            <option value="">-- Select Branch first --</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" id="search-btn" class="btn btn-primary" style="width: 100%; padding: 0.95rem; margin-top: 1rem;">
+        🔍 Check Matching Assessments &rarr;
+      </button>
+    </form>
+
+    <!-- Assessment Result Card -->
+    <div id="assessment-container" style="display: none;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const collegeSelect = document.getElementById('college_name');
+  const degreeSelect = document.getElementById('degree');
+  const yearSelect = document.getElementById('academic_year');
+  const branchSelect = document.getElementById('branch');
+  const subjectSelect = document.getElementById('subject');
+  const messageBox = document.getElementById('message-container');
+  const assessmentContainer = document.getElementById('assessment-container');
+
+  async function loadColleges() {
+    try {
+      const res = await fetch('/api/academics/college/options/?field=college_name');
+      const data = await res.json();
+      collegeSelect.innerHTML = '<option value="">-- Select College --</option>';
+
+      if (data.options && data.options.length > 0) {
+        data.options.forEach(opt => {
+          collegeSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+        });
+      } else {
+        collegeSelect.innerHTML = '<option value="">No registered colleges found</option>';
+      }
+    } catch (err) {
+      collegeSelect.innerHTML = '<option value="">Error loading colleges</option>';
+    }
+  }
+
+  collegeSelect.addEventListener('change', async () => {
+    degreeSelect.innerHTML = '<option value="">-- Loading degrees... --</option>';
+    degreeSelect.disabled = true;
+    yearSelect.innerHTML = '<option value="">-- Select Degree first --</option>';
+    yearSelect.disabled = true;
+    branchSelect.innerHTML = '<option value="">-- Select Year first --</option>';
+    branchSelect.disabled = true;
+    subjectSelect.innerHTML = '<option value="">-- Select Branch first --</option>';
+    subjectSelect.disabled = true;
+    assessmentContainer.style.display = 'none';
+
+    if (!collegeSelect.value) return;
+
+    try {
+      const res = await fetch(`/api/academics/college/options/?field=degree&college_name=${encodeURIComponent(collegeSelect.value)}`);
+      const data = await res.json();
+      degreeSelect.innerHTML = '<option value="">-- Select Degree --</option>';
+      data.options.forEach(opt => {
+        degreeSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+      });
+      degreeSelect.disabled = false;
+    } catch (err) {
+      degreeSelect.innerHTML = '<option value="">Error loading degrees</option>';
+    }
+  });
+
+  degreeSelect.addEventListener('change', async () => {
+    yearSelect.innerHTML = '<option value="">-- Loading academic years... --</option>';
+    yearSelect.disabled = true;
+    branchSelect.innerHTML = '<option value="">-- Select Year first --</option>';
+    branchSelect.disabled = true;
+    subjectSelect.innerHTML = '<option value="">-- Select Branch first --</option>';
+    subjectSelect.disabled = true;
+    assessmentContainer.style.display = 'none';
+
+    if (!degreeSelect.value) return;
+
+    try {
+      const res = await fetch(`/api/academics/college/options/?field=academic_year&college_name=${encodeURIComponent(collegeSelect.value)}&degree=${encodeURIComponent(degreeSelect.value)}`);
+      const data = await res.json();
+      yearSelect.innerHTML = '<option value="">-- Select Academic Year --</option>';
+      data.options.forEach(opt => {
+        yearSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+      });
+      yearSelect.disabled = false;
+    } catch (err) {
+      yearSelect.innerHTML = '<option value="">Error loading years</option>';
+    }
+  });
+
+  yearSelect.addEventListener('change', async () => {
+    branchSelect.innerHTML = '<option value="">-- Loading branches... --</option>';
+    branchSelect.disabled = true;
+    subjectSelect.innerHTML = '<option value="">-- Select Branch first --</option>';
+    subjectSelect.disabled = true;
+    assessmentContainer.style.display = 'none';
+
+    if (!yearSelect.value) return;
+
+    try {
+      const res = await fetch(`/api/academics/college/options/?field=branch&college_name=${encodeURIComponent(collegeSelect.value)}&degree=${encodeURIComponent(degreeSelect.value)}&academic_year=${encodeURIComponent(yearSelect.value)}`);
+      const data = await res.json();
+      branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+      data.options.forEach(opt => {
+        branchSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+      });
+      branchSelect.disabled = false;
+    } catch (err) {
+      branchSelect.innerHTML = '<option value="">Error loading branches</option>';
+    }
+  });
+
+  branchSelect.addEventListener('change', async () => {
+    subjectSelect.innerHTML = '<option value="">-- Loading subjects... --</option>';
+    subjectSelect.disabled = true;
+    assessmentContainer.style.display = 'none';
+
+    if (!branchSelect.value) return;
+
+    try {
+      const res = await fetch(`/api/academics/college/options/?field=subject&college_name=${encodeURIComponent(collegeSelect.value)}&degree=${encodeURIComponent(degreeSelect.value)}&academic_year=${encodeURIComponent(yearSelect.value)}&branch=${encodeURIComponent(branchSelect.value)}`);
+      const data = await res.json();
+      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+      data.options.forEach(opt => {
+        subjectSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+      });
+      subjectSelect.disabled = false;
+    } catch (err) {
+      subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+    }
+  });
+
+  document.getElementById('college-match-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageBox.innerHTML = '';
+    assessmentContainer.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/assessments/match/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+          academic_type: 'college',
+          college_name: collegeSelect.value,
+          degree: degreeSelect.value,
+          academic_year: yearSelect.value,
+          branch: branchSelect.value,
+          subject: subjectSelect.value
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.found && data.assessment) {
+        assessmentContainer.innerHTML = `
+          <div class="assessment-result-card">
+            <div>
+              <div class="result-title">${data.assessment.title}</div>
+              <div class="result-meta">
+                <span>Subject: <strong>${data.assessment.subject}</strong></span> • 
+                <span>Assessment Length: <strong>${data.assessment.target_length} Questions</strong> (Adaptive)</span>
+              </div>
+            </div>
+            <a href="/student/assessment/${data.assessment.id}/instructions/" class="btn btn-primary">
+              Enter Test Zone &rarr;
+            </a>
+          </div>
+        `;
+        assessmentContainer.style.display = 'block';
+      } else {
+        messageBox.innerHTML = `
+          <div class="alert alert-warning">
+            <span>${data.message || 'No assessment is currently available for your selected academic details.'}</span>
+          </div>
+        `;
+      }
+    } catch (err) {
+      messageBox.innerHTML = `
+        <div class="alert alert-error">
+          <span>Failed to query matching assessments: ${err.message}</span>
+        </div>
+      `;
+    }
+  });
+
+  loadColleges();
+</script>
+{% endblock %}

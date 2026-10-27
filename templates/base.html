@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Adaptive Assessment Platform | IRT & XGBoost{% endblock %}</title>
+  <meta name="description" content="AI-Powered Adaptive Assessment and Personalized Learning Platform using Item Response Theory (2PL IRT) and XGBoost.">
+  
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <!-- Header / Navigation -->
+  <header>
+    <nav class="navbar">
+      <a href="{% url 'landing' %}" class="nav-brand">
+        <span>AdaptIQ</span>
+        <span class="brand-badge">IRT + XGBoost</span>
+      </a>
+
+      <div class="nav-links">
+        {% if user.is_authenticated %}
+          <span class="nav-link" style="color: var(--text-dim); font-size: 0.85rem;">
+            {{ user.email }} ({{ user.get_role_display }})
+          </span>
+          {% if user.is_educator %}
+            <a href="{% url 'educator_dashboard' %}" class="nav-link">Educator Hub</a>
+          {% elif user.is_student %}
+            <a href="{% url 'student_dashboard' %}" class="nav-link">Student Hub</a>
+            <a href="{% url 'student_dashboard' %}#history" class="nav-link" style="color: #a5b4fc; font-weight: 600;">📊 Previous Attempts</a>
+          {% endif %}
+          <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">Log Out</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="nav-link">Log In</a>
+          <a href="{% url 'register' %}" class="btn btn-primary btn-sm">Get Started</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+    <div class="alert-container">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Main Content Body -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2026 AdaptIQ — AI-Powered Adaptive Assessment Platform Using Item Response Theory (2PL IRT) & XGBoost.</p>
+  </footer>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

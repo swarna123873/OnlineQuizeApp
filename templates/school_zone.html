@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}School Zone — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<style>
+  .zone-container {
+    max-width: 860px;
+    margin: 2.5rem auto;
+    padding: 0 1.5rem;
+  }
+
+  .zone-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .zone-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 1.25rem;
+  }
+
+  .zone-header h1 {
+    font-size: 1.85rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .zone-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  .assessment-result-card {
+    margin-top: 2rem;
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .result-title {
+    font-size: 1.35rem;
+    color: #ffffff;
+    margin-bottom: 0.4rem;
+  }
+
+  .result-meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="zone-container">
+  <div class="zone-card">
+    <div class="zone-header">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+        <h1>🏫 School Zone Assessment</h1>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <a href="{% url 'student_dashboard' %}#history" class="btn btn-secondary btn-sm" style="border-color: rgba(99, 102, 241, 0.4); color: #c7d2fe;">📊 Previous Attempts</a>
+          <a href="{% url 'student_dashboard' %}" class="btn btn-secondary btn-sm">&larr; Back to Zones</a>
+        </div>
+      </div>
+      <p>Select your registered school curriculum. All options are populated dynamically from educator database records.</p>
+    </div>
+
+    <div id="message-container"></div>
+
+    <form id="school-match-form">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label for="school_name" class="form-label">School Name *</label>
+        <select id="school_name" name="school_name" class="form-input" required>
+          <option value="">-- Loading registered schools... --</option>
+        </select>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label for="board" class="form-label">Education Board *</label>
+          <select id="board" name="board" class="form-input" required disabled>
+            <option value="">-- Select School first --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="standard" class="form-label">Standard / Class *</label>
+          <select id="standard" name="standard" class="form-input" required disabled>
+            <option value="">-- Select Board first --</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="subject" class="form-label">Subject *</label>
+        <select id="subject" name="subject" class="form-input" required disabled>
+          <option value="">-- Select Standard first --</option>
+        </select>
+      </div>
+
+      <button type="submit" id="search-btn" class="btn btn-primary" style="width: 100%; padding: 0.95rem; margin-top: 1rem;">
+        🔍 Check Matching Assessments &rarr;
+      </button>
+    </form>
+
+    <!-- Assessment Result Card -->
+    <div id="assessment-container" style="display: none;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const schoolSelect = document.getElementById('school_name');
+  const boardSelect = document.getElementById('board');
+  const standardSelect = document.getElementById('standard');
+  const subjectSelect = document.getElementById('subject');
+  const messageBox = document.getElementById('message-container');
+  const assessmentContainer = document.getElementById('assessment-container');
+
+  // Load initial schools from database
+  async function loadSchools() {
+    try {
+      const res = await fetch('/api/academics/school/options/?field=school_name');
+      const data = await res.json();
+      schoolSelect.innerHTML = '<option value="">-- Select School --</option>';
+
+      if (data.options && data.options.length > 0) {
+        data.options.forEach(opt => {
+          schoolSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+        });
+      } else {
+        schoolSelect.innerHTML = '<option value="">No registered schools found</option>';
+      }
+    } catch (err) {
+      schoolSelect.innerHTML = '<option value="">Error loading schools</option>';
+    }
+  }
+
+  // Cascading handler: School -> Board
+  schoolSelect.addEventListener('change', async () => {
+    boardSelect.innerHTML = '<option value="">-- Loading boards... --</option>';
+    boardSelect.disabled = true;
+    standardSelect.innerHTML = '<option value="">-- Select Board first --</option>';
+    standardSelect.disabled = true;
+    subjectSelect.innerHTML = '<option value="">-- Select Standard first --</option>';
+    subjectSelect.disabled = true;
+    assessmentContainer.style.display = 'none';
+
+    if (!schoolSelect.value) return;
+
+    try {
+      const res = await fetch(`/api/academics/school/options/?field=board&school_name=${encodeURIComponent(schoolSelect.value)}`);
+      const data = await res.json();
+      boardSelect.innerHTML = '<option value="">-- Select Board --</option>';
+      data.options.forEach(opt => {
+        boardSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+      });
+      boardSelect.disabled = false;
+    } catch (err) {
+      boardSelect.innerHTML = '<option value="">Error loading boards</option>';
+    }
+  });
+
+  // Cascading handler: Board -> Standard
+  boardSelect.addEventListener('change', async () => {
+    standardSelect.innerHTML = '<option value="">-- Loading classes... --</option>';
+    standardSelect.disabled = true;
+    subjectSelect.innerHTML = '<option value="">-- Select Standard first --</option>';
+    subjectSelect.disabled = true;
+    assessmentContainer.style.display = 'none';
+
+    if (!boardSelect.value) return;
+
+    try {
+      const res = await fetch(`/api/academics/school/options/?field=standard&school_name=${encodeURIComponent(schoolSelect.value)}&board=${encodeURIComponent(boardSelect.value)}`);
+      const data = await res.json();
+      standardSelect.innerHTML = '<option value="">-- Select Standard / Class --</option>';
+      data.options.forEach(opt => {
+        standardSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+      });
+      standardSelect.disabled = false;
+    } catch (err) {
+      standardSelect.innerHTML = '<option value="">Error loading standards</option>';
+    }
+  });
+
+  // Cascading handler: Standard -> Subject
+  standardSelect.addEventListener('change', async () => {
+    subjectSelect.innerHTML = '<option value="">-- Loading subjects... --</option>';
+    subjectSelect.disabled = true;
+    assessmentContainer.style.display = 'none';
+
+    if (!standardSelect.value) return;
+
+    try {
+      const res = await fetch(`/api/academics/school/options/?field=subject&school_name=${encodeURIComponent(schoolSelect.value)}&board=${encodeURIComponent(boardSelect.value)}&standard=${encodeURIComponent(standardSelect.value)}`);
+      const data = await res.json();
+      subjectSelect.innerHTML = '<option value="">-- Select Subject --</option>';
+      data.options.forEach(opt => {
+        subjectSelect.innerHTML += `<option value="${opt}">${opt}</option>`;
+      });
+      subjectSelect.disabled = false;
+    } catch (err) {
+      subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
+    }
+  });
+
+  // Handle Match Assessment Submission
+  document.getElementById('school-match-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageBox.innerHTML = '';
+    assessmentContainer.style.display = 'none';
+
+    try {
+      const res = await fetch('/api/assessments/match/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+          academic_type: 'school',
+          school_name: schoolSelect.value,
+          board: boardSelect.value,
+          standard: standardSelect.value,
+          subject: subjectSelect.value
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.found && data.assessment) {
+        assessmentContainer.innerHTML = `
+          <div class="assessment-result-card">
+            <div>
+              <div class="result-title">${data.assessment.title}</div>
+              <div class="result-meta">
+                <span>Subject: <strong>${data.assessment.subject}</strong></span> • 
+                <span>Assessment Length: <strong>${data.assessment.target_length} Questions</strong> (Adaptive)</span>
+              </div>
+            </div>
+            <a href="/student/assessment/${data.assessment.id}/instructions/" class="btn btn-primary">
+              Enter Test Zone &rarr;
+            </a>
+          </div>
+        `;
+        assessmentContainer.style.display = 'block';
+      } else {
+        messageBox.innerHTML = `
+          <div class="alert alert-warning">
+            <span>${data.message || 'No assessment is currently available for your selected academic details.'}</span>
+          </div>
+        `;
+      }
+    } catch (err) {
+      messageBox.innerHTML = `
+        <div class="alert alert-error">
+          <span>Failed to query matching assessments: ${err.message}</span>
+        </div>
+      `;
+    }
+  });
+
+  loadSchools();
+</script>
+{% endblock %}

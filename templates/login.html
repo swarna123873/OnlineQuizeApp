@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sign In — AdaptIQ{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Select your account role and sign in</p>
+    </div>
+
+    <div id="error-message-container"></div>
+
+    <form id="auth-form" method="POST" action="{% url 'login' %}">
+      {% csrf_token %}
+
+      <!-- Step 1: Role Selection -->
+      <span class="role-selector-label">1. Sign In As</span>
+      <div class="role-grid">
+        <div class="role-card active" data-role="educator" id="role-educator">
+          <input type="radio" name="role" value="educator" checked>
+          <span class="role-icon">👨‍🏫</span>
+          <span class="role-name">Educator/School</span>
+          <span class="role-desc">Educator portal</span>
+        </div>
+
+        <div class="role-card" data-role="student" id="role-student">
+          <input type="radio" name="role" value="student">
+          <span class="role-icon">🎓</span>
+          <span class="role-name">Student</span>
+          <span class="role-desc">Assessment zones</span>
+        </div>
+      </div>
+
+      <input type="hidden" id="selected-role" name="role" value="educator">
+
+      <!-- Step 2: Credentials -->
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-input" 
+          placeholder="name@institution.edu" 
+          required 
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+          <label for="password" class="form-label" style="margin-bottom: 0;">Password</label>
+          <a href="{% url 'forgot_password' %}" style="font-size: 0.8rem; color: #a5b4fc;">Forgot password?</a>
+        </div>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          class="form-input" 
+          placeholder="Your password" 
+          required 
+          autocomplete="current-password"
+        >
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary auth-submit-btn">
+        Sign In &rarr;
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <span>Don't have an account yet?</span>
+      <a href="{% url 'register' %}">Create Account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock %}
